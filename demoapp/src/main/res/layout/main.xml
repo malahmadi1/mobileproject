@@ -29,10 +29,67 @@
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:weightSum="1">
 
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+            <ProgressBar
+                android:id="@+id/circular_progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:layout_marginTop="50dp"
+                android:layout_marginLeft="40dp"
+                android:indeterminate="false"
+                android:max="48"
+                android:progress="1"
+                android:progressDrawable="@drawable/circular_progressbar"
+                android:layout_weight="0.11" />
+
+            <TextView
+                android:id="@+id/tv_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="120dp"
+                android:layout_marginLeft="170dp"
+                android:text="Steps"
+                />
+
+            <TextView
+                android:id="@+id/tv_steps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="150dp"
+                android:layout_marginLeft="170dp"
+                android:text="0"
+                android:textSize="40dp"/>
+
+                <Button
+                    android:text="Reset"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/button"
+                    android:layout_marginTop="120dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_below="@+id/tv_info" />
+
+            </RelativeLayout>
 
         </LinearLayout>
+
+
+
+            <!--    <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_marginTop="26dp"
+                    android:gravity="center|bottom"
+                    android:text=""
+                    android:textSize="24sp" />-->
+
+
     </ScrollView>
 
     <Button
@@ -40,7 +97,8 @@
         style="@style/toc_button"
         android:text="Show Histogram"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_weight="0.05" />
 
     <TextView
         android:id="@+id/text"
