@@ -64,7 +64,6 @@ try {
     Bundle extras = getIntent().getExtras();
     ArrayList<Integer> seriesOfNumbers = extras.getIntegerArrayList("numbers");
      int duration = Toast.LENGTH_LONG;
-
    // Toast.makeText(getApplicationContext(),seriesOfNumbers.get(0).toString(),Toast.LENGTH_LONG).show();
 
 }
@@ -77,14 +76,30 @@ catch(Exception ex){
         // create a couple arrays of y-values to plot:
         //interval on the Y-axis
         final Number[] domainLabels = {1, 2, 3, 6, 7, 8, 9, 10, 13, 14,15};
-        Number[] series1Numbers = {1, 4, 2, 8, 4, 16, 8, 32, 16, 64,20};
+       // Number[] series1Numbers = {1, 4, 2, 8, 4, 16, 8, 32, 16, 64,20};
+
+        ArrayList<Integer> seriesOfNumbers= new ArrayList<Integer>();;
+        seriesOfNumbers.add(0,1);
+        seriesOfNumbers.add(1,4);
+        seriesOfNumbers.add(2,8);
+        seriesOfNumbers.add(3,4);
+        seriesOfNumbers.add(4,4);
+        seriesOfNumbers.add(5,16);
+        seriesOfNumbers.add(6,8);
+        seriesOfNumbers.add(7,32);
+        seriesOfNumbers.add(8,16);
+        seriesOfNumbers.add(9,64);
+        seriesOfNumbers.add(10,20);
+
 
         //Number[] series2Numbers = {5, 2, 10, 5, 20, 10, 40, 20, 80, 40};
 
         // turn the above arrays into XYSeries':
         // (Y_VALS_ONLY means use the element index as the x value)
+      // XYSeries series1 = new SimpleXYSeries(
+        //        Arrays.asList(series1Numbers), SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "Average Speed");
         XYSeries series1 = new SimpleXYSeries(
-                Arrays.asList(series1Numbers), SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "Average Speed");
+                seriesOfNumbers, SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "Average Speed");
        // XYSeries series2 = new SimpleXYSeries(
         //        Arrays.asList(series2Numbers), SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "Series2");
 
