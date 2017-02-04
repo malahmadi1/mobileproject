@@ -18,6 +18,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.github.triplet.play'
 
 dependencies {
+    compile 'com.google.android.gms:play-services:8.4.0'
 	compile project(':androidplot-core')
     compile 'com.crittercism:crittercism-android-agent:5.4.0'
 

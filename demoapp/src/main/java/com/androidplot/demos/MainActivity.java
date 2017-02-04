@@ -18,13 +18,22 @@ package com.androidplot.demos;
 
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
@@ -34,12 +43,37 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crittercism.app.Crittercism;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.ActivityRecognition;
 
 import java.util.ArrayList;
 
-public class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends Activity implements SensorEventListener, LocationListener,GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = MainActivity.class.getName();
+    public GoogleApiClient mApiClient;
+    PendingIntent pendingIntent;
+    Button start, stop;
+    TextView ave_speed, cur_speed;
+    TextView cur_status;
+    LocationManager locationManager;
+    Location last_location = new Location("");
+    Location current_location = new Location("");
+    double cul_dis = 0;
+    long last_time = 0;
+    long cur_time = 0;
+    long cul_time = 0;
+    boolean first_start = false;
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("message");
+            Log.d("receiver", "Got message: " + message);
+            set_status(message);
+        }
+    };
 
     // DO *NOT* CHANGE THIS LINE! (CI-MATCH-POPULATE)
     private static final String CRITTERCISM_APP_ID = null;
@@ -65,6 +99,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         tv_steps.setText("0");
         //corr = 114;
         Button Reset = (Button)findViewById(R.id.button);
+        start = (Button)findViewById(R.id.start);
+        stop = (Button)findViewById(R.id.stop);
+        ave_speed = (TextView)findViewById(R.id.ave_speed);
+        cur_speed = (TextView)findViewById(R.id.cur_speed);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        cur_status = (TextView)findViewById(R.id.status);
         Reset.setOnClickListener(
                 new View.OnClickListener()
                 {
@@ -122,7 +162,38 @@ public class MainActivity extends Activity implements SensorEventListener {
                 startActivity(intent);
             }
         });
+        start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                first_start = true;
+                last_time = System.currentTimeMillis()/1000;
+                Intent intent = new Intent( MainActivity.this, ActivityRecognizedService.class );
+                pendingIntent = PendingIntent.getService( MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT );
+                ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( mApiClient, 3000, pendingIntent );
+                locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 0, 0, MainActivity.this);
+            }
+        });
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cul_time = 0;
+                cul_dis = 0;
+                cur_speed.setText("current speed: 0 m/s");
+                ave_speed.setText("average speed: 0m/s");
+                cur_status.setText("current status");
+                ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mApiClient,pendingIntent);
+                locationManager.removeUpdates(MainActivity.this);
+            }
+        });
+        mApiClient = new GoogleApiClient.Builder(this)
+                .addApi(ActivityRecognition.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
 
+        mApiClient.connect();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                new IntentFilter("custom-event-name"));
 
     }
 
@@ -165,5 +236,66 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+    public void onLocationChanged(Location location) {
+        cur_time = System.currentTimeMillis()/1000;
+        double duration = cur_time - last_time;
+        last_time = cur_time;
+        cul_time += duration;
+        if (cul_time == 0)
+            cul_time = 1;
+        if(first_start){
+            first_start = false;
+            last_location.setLatitude(location.getLatitude());
+            last_location.setLongitude(location.getLongitude());
+        }
+        else{
+            current_location.setLatitude(location.getLatitude());
+            current_location.setLongitude(location.getLongitude());
+            double distance =current_location.distanceTo(last_location);
+            cul_dis += distance;
+            last_location.setLatitude(location.getLatitude());
+            last_location.setLongitude(location.getLongitude());
+        }
+        cur_speed.setText("current speed" + location.getSpeed() + " m/s");
+        ave_speed.setText("average speed:" + cul_dis/cul_time);
+    }
+
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        Log.i("MainActivity", "onStatusChanged(:)");
+    }
+
+    public void onProviderEnabled(String provider) {
+        Log.i("MainActivity", "onProviderEnabled(:)");
+    }
+
+    public void onProviderDisabled(String provider) {
+        Log.i("MainActivity", "onProviderDisabled(:)");
+    }
+
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+    public void set_status(String status){
+        if (!status.equals(cur_status.getText())){
+            cur_status.setText(status);
+        }
+    }
+    @Override
+    protected void onDestroy() {
+        // Unregister since the activity is about to be closed.
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+        super.onDestroy();
     }
 }
