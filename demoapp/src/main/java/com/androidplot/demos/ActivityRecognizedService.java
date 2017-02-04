@@ -45,22 +45,18 @@ public class ActivityRecognizedService extends IntentService {
                 }
                 case DetectedActivity.RUNNING: {
                     Log.e( "ActivityRecogition", "Running: " + activity.getConfidence() );
-
                         Log.d("sender", "Broadcasting message");
                         Intent intent = new Intent("custom-event-name");
                         intent.putExtra("message", "Running");
-
                     break;
                 }
                 case DetectedActivity.STILL: {
                     Log.e( "ActivityRecogition", "Still: " + activity.getConfidence() );
-
                         Log.d("sender", "Broadcasting message");
                         Intent intent = new Intent("custom-event-name");
                         // You can also include some extra data.
                         intent.putExtra("message", "Still");
                         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
                     break;
                 }
                 case DetectedActivity.TILTING: {
@@ -73,7 +69,6 @@ public class ActivityRecognizedService extends IntentService {
                         Intent intent = new Intent("custom-event-name");
                         intent.putExtra("message", "Walking");
                         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
                     break;
                 }
                 case DetectedActivity.UNKNOWN: {

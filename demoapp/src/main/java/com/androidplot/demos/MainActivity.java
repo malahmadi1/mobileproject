@@ -48,9 +48,10 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends Activity implements SensorEventListener, LocationListener,GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
-
+    ArrayList<String> data = new ArrayList<String>();
     private static final String TAG = MainActivity.class.getName();
     public GoogleApiClient mApiClient;
     PendingIntent pendingIntent;
@@ -65,6 +66,8 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
     long cur_time = 0;
     long cul_time = 0;
     boolean first_start = false;
+    double action_duration = 0;
+    String ini_status = "Still";
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -194,7 +197,6 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
         mApiClient.connect();
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
                 new IntentFilter("custom-event-name"));
-
     }
 
     @Override
@@ -238,6 +240,7 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
 
     }
     public void onLocationChanged(Location location) {
+        Date currentDate= new Date(System.currentTimeMillis());
         cur_time = System.currentTimeMillis()/1000;
         double duration = cur_time - last_time;
         last_time = cur_time;
@@ -259,6 +262,14 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
         }
         cur_speed.setText("current speed" + location.getSpeed() + " m/s");
         ave_speed.setText("average speed:" + cul_dis/cul_time);
+        if( !cur_status.equals(ini_status)){
+            data.add(currentDate+";"+cul_dis/cul_time+";"+ cur_status.getText()+";"+ action_duration);
+            action_duration = 0;
+            Log.e("datarecord",""+data);
+        }
+        else{
+            action_duration += duration;
+        }
     }
 
     public void onStatusChanged(String provider, int status, Bundle extras) {
