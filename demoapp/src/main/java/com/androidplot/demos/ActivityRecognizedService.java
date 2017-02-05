@@ -25,57 +25,37 @@ public class ActivityRecognizedService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if(ActivityRecognitionResult.hasResult(intent)) {
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-            handleDetectedActivities( result.getProbableActivities() );
+            DetectedActivity mostProbableActivity = result.getMostProbableActivity();
+            int activityType = mostProbableActivity.getType();
+            if (activityType == DetectedActivity.ON_FOOT) {
+                DetectedActivity betterActivity = walkingOrRunning(result.getProbableActivities());
+                if (null != betterActivity)
+                    mostProbableActivity = betterActivity;
+            }
+            Intent intent2 = new Intent("custom-event-name");
+            if (mostProbableActivity.getType() == DetectedActivity.RUNNING){
+                intent2.putExtra("message", "Running");
+            }
+            else if(mostProbableActivity.getType() == DetectedActivity.WALKING){
+                intent2.putExtra("message", "Walking");
+            }
+            else {
+                intent2.putExtra("message", "Unkown");
+            }
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent2);
         }
     }
-    private void handleDetectedActivities(List<DetectedActivity> probableActivities) {
-        for( DetectedActivity activity : probableActivities ) {
-            switch( activity.getType() ) {
-                case DetectedActivity.IN_VEHICLE: {
-                    Log.e( "ActivityRecogition", "In Vehicle: " + activity.getConfidence() );
-                    break;
-                }
-                case DetectedActivity.ON_BICYCLE: {
-                    Log.e( "ActivityRecogition", "On Bicycle: " + activity.getConfidence() );
-                    break;
-                }
-                case DetectedActivity.ON_FOOT: {
-                    Log.e( "ActivityRecogition", "On Foot: " + activity.getConfidence() );
-                    break;
-                }
-                case DetectedActivity.RUNNING: {
-                    Log.e( "ActivityRecogition", "Running: " + activity.getConfidence() );
-                        Log.d("sender", "Broadcasting message");
-                        Intent intent = new Intent("custom-event-name");
-                        intent.putExtra("message", "Running");
-                    break;
-                }
-                case DetectedActivity.STILL: {
-                    Log.e( "ActivityRecogition", "Still: " + activity.getConfidence() );
-                        Log.d("sender", "Broadcasting message");
-                        Intent intent = new Intent("custom-event-name");
-                        // You can also include some extra data.
-                        intent.putExtra("message", "Still");
-                        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-                    break;
-                }
-                case DetectedActivity.TILTING: {
-                    Log.e( "ActivityRecogition", "Tilting: " + activity.getConfidence() );
-                    break;
-                }
-                case DetectedActivity.WALKING: {
-                    Log.e( "ActivityRecogition", "Walking: " + activity.getConfidence() );
-                        Log.d("sender", "Broadcasting message");
-                        Intent intent = new Intent("custom-event-name");
-                        intent.putExtra("message", "Walking");
-                        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-                    break;
-                }
-                case DetectedActivity.UNKNOWN: {
-                    Log.e( "ActivityRecogition", "Unknown: " + activity.getConfidence() );
-                    break;
-                }
-            }
+    private DetectedActivity walkingOrRunning(List<DetectedActivity> probableActivities) {
+        DetectedActivity myActivity = null;
+        int confidence = 0;
+        for (DetectedActivity activity : probableActivities) {
+            if (activity.getType() != DetectedActivity.RUNNING && activity.getType() != DetectedActivity.WALKING)
+                continue;
+
+            if (activity.getConfidence() > confidence)
+                myActivity = activity;
         }
+
+        return myActivity;
     }
 }
