@@ -28,6 +28,7 @@ public class ActivityRecognizedService extends IntentService {
             DetectedActivity mostProbableActivity = result.getMostProbableActivity();
             int activityType = mostProbableActivity.getType();
             if (activityType == DetectedActivity.ON_FOOT) {
+                Log.e("actiondetection", "on_foot");
                 DetectedActivity betterActivity = walkingOrRunning(result.getProbableActivities());
                 if (null != betterActivity)
                     mostProbableActivity = betterActivity;
@@ -37,6 +38,7 @@ public class ActivityRecognizedService extends IntentService {
                 intent2.putExtra("message", "Running");
             }
             else if(mostProbableActivity.getType() == DetectedActivity.WALKING){
+                Log.e("actionfound","walking" + mostProbableActivity.getConfidence());
                 intent2.putExtra("message", "Walking");
             }
             else {
@@ -47,15 +49,17 @@ public class ActivityRecognizedService extends IntentService {
     }
     private DetectedActivity walkingOrRunning(List<DetectedActivity> probableActivities) {
         DetectedActivity myActivity = null;
-        int confidence = 75;
         for (DetectedActivity activity : probableActivities) {
-            if (activity.getType() != DetectedActivity.RUNNING && activity.getType() != DetectedActivity.WALKING)
-                continue;
-
-            if (activity.getConfidence() > confidence)
-                myActivity = activity;
+            if (activity.getType() == DetectedActivity.RUNNING || activity.getType() == DetectedActivity.WALKING) {
+                if(myActivity == null)
+                    myActivity = activity;
+                else
+                {
+                    if (myActivity.getConfidence() < activity.getConfidence())
+                        myActivity = activity;
+                }
+            }
         }
-
         return myActivity;
     }
 }

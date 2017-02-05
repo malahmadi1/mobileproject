@@ -182,7 +182,7 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
                 last_time = System.currentTimeMillis()/1000;
                 Intent intent = new Intent( MainActivity.this, ActivityRecognizedService.class );
                 pendingIntent = PendingIntent.getService( MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT );
-                ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( mApiClient, 3000, pendingIntent );
+                ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( mApiClient, 10000, pendingIntent );
                 locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 1000,0, MainActivity.this);
             }
         });
@@ -319,7 +319,8 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
         cur_speed.setText("current speed" + location.getSpeed() + " m/s");
         ave_speed.setText("average speed:" + cul_dis/cul_time);
         if( !cur_status.getText().toString().equals(ini_status)){
-            data.add(currentDate+";"+action_distance/action_duration+";"+ cur_status.getText()+";"+ action_duration);
+            if(cur_status.getText().toString().equals("Unknown"));
+                data.add(currentDate+";"+action_distance/action_duration+";"+ cur_status.getText()+";"+ action_duration);
             action_duration = 0;
             action_distance = 0;
             ini_status = cur_status.getText().toString();
