@@ -67,8 +67,9 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
     long cur_time = 0;
     long cul_time = 0;
     boolean first_start = false;
-    double action_duration = 0;
-    String ini_status = "Still";
+    double action_duration = 0.0;
+    double action_distance = 0.0;
+    String ini_status = "Unknown";
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -182,7 +183,7 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
                 Intent intent = new Intent( MainActivity.this, ActivityRecognizedService.class );
                 pendingIntent = PendingIntent.getService( MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT );
                 ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates( mApiClient, 3000, pendingIntent );
-                locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 0, 0, MainActivity.this);
+                locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 1000,0, MainActivity.this);
             }
         });
         stop.setOnClickListener(new View.OnClickListener() {
@@ -192,7 +193,7 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
                 cul_dis = 0;
                 cur_speed.setText("current speed: 0 m/s");
                 ave_speed.setText("average speed: 0m/s");
-                cur_status.setText("current status");
+                cur_status.setText("Unknown");
                 ActivityRecognition.ActivityRecognitionApi.removeActivityUpdates(mApiClient,pendingIntent);
                 locationManager.removeUpdates(MainActivity.this);
             }
@@ -294,6 +295,7 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
 
     }
     public void onLocationChanged(Location location) {
+        double distance = 0.0;
         Date currentDate= new Date(System.currentTimeMillis());
         cur_time = System.currentTimeMillis()/1000;
         double duration = cur_time - last_time;
@@ -309,19 +311,22 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
         else{
             current_location.setLatitude(location.getLatitude());
             current_location.setLongitude(location.getLongitude());
-            double distance =current_location.distanceTo(last_location);
+            distance =current_location.distanceTo(last_location);
             cul_dis += distance;
             last_location.setLatitude(location.getLatitude());
             last_location.setLongitude(location.getLongitude());
         }
         cur_speed.setText("current speed" + location.getSpeed() + " m/s");
         ave_speed.setText("average speed:" + cul_dis/cul_time);
-        if( !cur_status.equals(ini_status)){
-            data.add(currentDate+";"+cul_dis/cul_time+";"+ cur_status.getText()+";"+ action_duration);
+        if( !cur_status.getText().toString().equals(ini_status)){
+            data.add(currentDate+";"+action_distance/action_duration+";"+ cur_status.getText()+";"+ action_duration);
             action_duration = 0;
+            action_distance = 0;
+            ini_status = cur_status.getText().toString();
             Log.e("datarecord",""+data);
         }
         else{
+            action_distance += distance;
             action_duration += duration;
         }
     }

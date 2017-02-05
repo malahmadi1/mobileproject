@@ -40,14 +40,14 @@ public class ActivityRecognizedService extends IntentService {
                 intent2.putExtra("message", "Walking");
             }
             else {
-                intent2.putExtra("message", "Unkown");
+                intent2.putExtra("message", "Unknown");
             }
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent2);
         }
     }
     private DetectedActivity walkingOrRunning(List<DetectedActivity> probableActivities) {
         DetectedActivity myActivity = null;
-        int confidence = 0;
+        int confidence = 75;
         for (DetectedActivity activity : probableActivities) {
             if (activity.getType() != DetectedActivity.RUNNING && activity.getType() != DetectedActivity.WALKING)
                 continue;
