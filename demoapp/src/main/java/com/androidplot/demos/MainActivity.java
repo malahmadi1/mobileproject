@@ -31,6 +31,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -85,11 +86,13 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
     TextView tv_steps;
     SensorManager sensorManager;
     boolean running = false;
+    ObjectAnimator anim;
+    CountDownTimer mCountDownTimer;
     //    lowPass(float[] input, float[] output);
     static final float ALPHA = 0.25f;
     int stepsensor;
     public float corr;
-    int i = 0;
+    int i = 0;int j=0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -99,6 +102,7 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
         tv_steps = (TextView)findViewById(R.id.tv_steps);
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         mprogressBar = (ProgressBar) findViewById(R.id.circular_progress_bar);
+        mprogressBar.setProgress(0);
         tv_steps.setText("0");
         //corr = 114;
         Button Reset = (Button)findViewById(R.id.button);
@@ -115,15 +119,20 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
                     {
                         TextView text1 = (TextView)findViewById(R.id.button);
                         tv_steps.setText("0");
+                        mprogressBar.setMax(500);
+                        mprogressBar.setProgress(0);
+                        j = 0;
                         i = 0;
                         //  corr = Float.valueOf((String) tv_steps.getText());
                     }
                 }
         );
+        mprogressBar.setMax(500);
+
         ObjectAnimator anim = ObjectAnimator.ofInt(mprogressBar, "progress", 0, 100);
         anim.setDuration(15000);
-        anim.setInterpolator(new DecelerateInterpolator());
-        anim.start();
+    /*    anim.setInterpolator(new DecelerateInterpolator());
+        anim.start();*/
 
         if (CRITTERCISM_APP_ID != null) {
             Log.d(TAG, "Crittercism initialized.");
@@ -221,17 +230,62 @@ public class MainActivity extends Activity implements SensorEventListener, Locat
         //   corr = Float.valueOf((String) tv_steps.getText());
     }
     @Override
-    public void onSensorChanged(SensorEvent event) {
+    public void onSensorChanged ( final SensorEvent event){
         i++;
-        if( i == 1)
+        if (i == 1)
             corr = event.values[0];
         //    corr = Float.valueOf((String) tv_steps.getText());
-        if(running){
+        if (running) {
+
+
             // tv_steps.setText("0");
 /*            stepsensor = lowPass(event.values[0],stepsensor);
             tv_steps.setText(String.valueOf(stepsensor));*/
-
+            //anim.start();
             tv_steps.setText(String.valueOf(event.values[0] - corr));
+            if(!(tv_steps.getText().toString().equals("500.0"))) {
+                mCountDownTimer = new CountDownTimer(5000000, 1000) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                        // Log.v("Log_tag", "Tick of Progress"+ i+ millisUntilFinished);
+                        j = j + 1;
+                        //mprogressBar.setProgress(j);
+                        mprogressBar.setProgress((int) (event.values[0] - corr));
+
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        //Do what you want
+                        j = j + 1;
+                        mprogressBar.setProgress((int) (event.values[0] - corr));
+                        tv_steps.setText("Task accomplished");
+                        mprogressBar.setProgress(0);
+                    }
+                };
+                mCountDownTimer.start();
+            }
+            else
+            {
+                tv_steps.setText("0");
+            }
+/*                mCountDownTimer=new CountDownTimer(5000,100) {
+                @Override
+                public void onTick ( long millisUntilFinished){
+                    // Log.v("Log_tag", "Tick of Progress"+ i+ millisUntilFinished);
+                    //i++;
+                    // mprogressBar.setProgress(i);
+                    mprogressBar.setProgress((int) (event.values[0] - corr));
+
+                }
+
+                @Override
+                public void onFinish () {
+                    //Do what you want
+                    //i++;
+                    mprogressBar.setProgress((int) (event.values[0] - corr));
+                }
+                };*/
         }
     }
 
